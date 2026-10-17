@@ -1,0 +1,15 @@
+¿Cuáles fueron los principales desafíos técnicos que enfrentaste en el módulo
+correspondiente a tu rol? 
+Erick Ivan Ortiz Lozano:
+Armar el sistema eléctrico fue tedioso ya que uno de los motores se quemó por sobrevoltaje, 
+pero lo complicado fue hacer el codigo ya que no sabía si se estaba haciendo bien ya que el armado 
+eléctrico se estaba complicando asi que podia ser error de red o error de circuito, sobre el sistema 
+de node-red no hubo gran complicación ya que podía hacer un inject si necesitaba testear datos tomando 
+en cuenta que el del circuito se le complicó, lo del repositorio fue sencillo, ya que todo estaba hecho 
+solo fue refinar detalles
+
+¿Cómo reacciona tu módulo si el microcontrolador pierde alimentación eléctrica o si la
+Raspberry Pi se desconecta de la red durante la operación del proceso?
+Si la Raspberry se desconecta solo no habrá comunicación con el bot de telegram pero si el 
+microcontrolador pierde alimentación el sistema se compromete ya que no hay sensor ni actuador 
+si ocurre algo, operariamos a ciegas si ocurre
