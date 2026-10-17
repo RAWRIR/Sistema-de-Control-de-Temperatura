@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Diagrama Eléctrico del Sistema</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    .component-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px -4px rgba(0,0,0,0.15);
+    }
+    .wire-active {
+      stroke-width: 4 !important;
+      filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.7));
+    }
+  </style>
+</head>
+<body class="bg-transparent text-[var(--foreground)] antialiased p-4">
+  <div class="max-w-6xl mx-auto space-y-6">
+
+    <!-- Header Card -->
+    <div class="bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-2xl p-6 shadow-sm">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-500 border border-blue-500/20 mb-2">
+            Esquema Electrónico Normalizado
+          </span>
+          <h1 class="text-2xl font-bold tracking-tight">Diagrama Eléctrico del Sistema</h1>
+          <p class="text-[var(--muted-foreground)] text-sm mt-1">
+            ESP32 + Sensor DHT11 + Driver de Motor DC (4 Diodos Reductores + Diodo Flyback + Capacitor Lenteja + NPN 2N2222)
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="zoomIn()" class="px-3 py-1.5 text-xs font-medium bg-[var(--background)] border border-[var(--border)] rounded-lg hover:bg-[var(--border)] transition">Zoom +</button>
+          <button onclick="zoomOut()" class="px-3 py-1.5 text-xs font-medium bg-[var(--background)] border border-[var(--border)] rounded-lg hover:bg-[var(--border)] transition">Zoom -</button>
+          <button onclick="resetZoom()" class="px-3 py-1.5 text-xs font-medium bg-[var(--background)] border border-[var(--border)] rounded-lg hover:bg-[var(--border)] transition">Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SVG Schematic Canvas Card -->
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-4 shadow-sm overflow-hidden">
+      <div class="overflow-x-auto overflow-y-hidden" id="svg-container">
+        <svg id="schematic-svg" viewBox="0 0 1150 720" class="w-full min-w-[950px] h-auto select-none transition-transform duration-200" style="transform-origin: center center;">
+          <defs>
+            <!-- Diode Marker / Symbol Template -->
+            <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="currentColor" stroke-opacity="0.04" stroke-width="1" />
+            </pattern>
+            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+
+          <!-- Background grid -->
+          <rect width="100%" height="100%" fill="url(#grid)" />
+
+          <!-- ==================== POWER SUPPLY ==================== -->
+          <g id="comp-powersupply" class="cursor-pointer" onclick="showDetails('powersupply')">
+            <rect x="40" y="80" width="130" height="150" rx="10" fill="currentColor" fill-opacity="0.05" stroke="#ef4444" stroke-width="2" />
+            <text x="105" y="115" text-anchor="middle" font-weight="bold" font-size="14" fill="currentColor">FUENTE DC</text>
+            <text x="105" y="135" text-anchor="middle" font-size="11" fill="#64748b">Cargador USB</text>
+            <text x="105" y="170" text-anchor="middle" font-size="20" font-weight="bold" fill="#ef4444">5V DC</text>
+            
+            <!-- Terminals -->
+            <circle cx="170" cy="115" r="5" fill="#ef4444" />
+            <text x="155" y="110" font-size="11" font-weight="bold" fill="#ef4444">+5V</text>
+            
+            <circle cx="170" cy="195" r="5" fill="#1e293b" />
+            <text x="155" y="190" font-size="11" font-weight="bold" fill="#64748b">GND</text>
+          </g>
+
+          <!-- 5V Wire to Diode 1 -->
+          <line x1="170" y1="115" x2="310" y2="115" stroke="#ef4444" stroke-width="2.5" />
+          <circle cx="310" cy="115" r="4.5" fill="#ef4444" />
+          <text x="230" y="105" font-size="11" font-weight="bold" fill="#ef4444">+5V Bus</text>
+
+          <!-- ==================== 4 DIODES IN SERIES (VOLTAGE DROPPER) ==================== -->
+          <g id="comp-diodes" class="cursor-pointer" onclick="showDetails('diodes')">
+            <!-- Box around the 4 diodes -->
+            <rect x="250" y="130" width="180" height="215" rx="8" fill="#f59e0b" fill-opacity="0.06" stroke="#f59e0b" stroke-dasharray="4,4" stroke-width="1.5" />
+            <text x="345" y="150" text-anchor="middle" font-size="11" font-weight="bold" fill="#d97706">Reductor de Voltaje (~2.8V Drop)</text>
+            
+            <!-- Wire from 5V bus to D1 -->
+            <line x1="310" y1="115" x2="310" y2="160" stroke="#ef4444" stroke-width="2.5" />
+
+            <!-- D1 -->
+            <path d="M 300 160 L 320 160 L 310 178 Z" fill="#475569" stroke="#334155" stroke-width="1.5" />
+            <line x1="300" y1="178" x2="320" y2="178" stroke="#334155" stroke-width="2" />
+            <text x="328" y="172" font-size="11" font-weight="bold" fill="currentColor">D1 <tspan font-size="9" fill="#64748b">1N4007</tspan></text>
+            <line x1="310" y1="178" x2="310" y2="200" stroke="#334155" stroke-width="2" />
+
+            <!-- D2 -->
+            <path d="M 300 200 L 320 200 L 310 218 Z" fill="#475569" stroke="#334155" stroke-width="1.5" />
+            <line x1="300" y1="218" x2="320" y2="218" stroke="#334155" stroke-width="2" />
+            <text x="328" y="212" font-size="11" font-weight="bold" fill="currentColor">D2 <tspan font-size="9" fill="#64748b">1N4007</tspan></text>
+            <line x1="310" y1="218" x2="310" y2="240" stroke="#334155" stroke-width="2" />
+
+            <!-- D3 -->
+            <path d="M 300 240 L 320 240 L 310 258 Z" fill="#475569" stroke="#334155" stroke-width="1.5" />
+            <line x1="300" y1="258" x2="320" y2="258" stroke="#334155" stroke-width="2" />
+            <text x="328" y="252" font-size="11" font-weight="bold" fill="currentColor">D3 <tspan font-size="9" fill="#64748b">1N4007</tspan></text>
+            <line x1="310" y1="258" x2="310" y2="280" stroke="#334155" stroke-width="2" />
+
+            <!-- D4 -->
+            <path d="M 300 280 L 320 280 L 310 298 Z" fill="#475569" stroke="#334155" stroke-width="1.5" />
+            <line x1="300" y1="298" x2="320" y2="298" stroke="#334155" stroke-width="2" />
+            <text x="328" y="292" font-size="11" font-weight="bold" fill="currentColor">D4 <tspan font-size="9" fill="#64748b">1N4007</tspan></text>
+            <line x1="310" y1="298" x2="310" y2="330" stroke="#334155" stroke-width="2.5" />
+            
+            <text x="345" y="325" font-size="10" font-weight="bold" fill="#10b981">V_out ≈ 2.2V - 2.5V</text>
+          </g>
+
+          <!-- Node after D4 -->
+          <circle cx="310" cy="355" r="4.5" fill="#ef4444" />
+          <line x1="310" y1="330" x2="310" y2="355" stroke="#ef4444" stroke-width="2.5" />
+
+          <!-- ==================== MOTOR PARALLEL STAGE ==================== -->
+          <!-- Top rail of motor parallel stage -->
+          <line x1="220" y1="355" x2="400" y2="355" stroke="#ef4444" stroke-width="2.5" />
+          <circle cx="220" cy="355" r="4" fill="#ef4444" />
+          <circle cx="400" cy="355" r="4" fill="#ef4444" />
+          <text x="310" y="348" text-anchor="middle" font-size="10" font-weight="bold" fill="#ef4444">+ MOTOR (2.2V)</text>
+
+          <!-- Branch 1: D5 Flyback Diode (Antiparallel: Cathode at top, Anode at bottom) -->
+          <g id="comp-flyback" class="cursor-pointer" onclick="showDetails('flyback')">
+            <line x1="220" y1="355" x2="220" y2="378" stroke="#334155" stroke-width="2" />
+            <!-- Diode pointing UP -->
+            <line x1="210" y1="378" x2="230" y2="378" stroke="#334155" stroke-width="2" />
+            <path d="M 210 396 L 230 396 L 220 378 Z" fill="#475569" stroke="#334155" stroke-width="1.5" />
+            <line x1="220" y1="396" x2="220" y2="440" stroke="#334155" stroke-width="2" />
+            <text x="210" y="415" text-anchor="end" font-size="10" font-weight="bold" fill="currentColor">D5 Flyback</text>
+            <text x="210" y="428" text-anchor="end" font-size="8.5" fill="#64748b">1N4007</text>
+          </g>
+
+          <!-- Branch 2: Motor DC (Center) -->
+          <g id="comp-motor" class="cursor-pointer" onclick="showDetails('motor')">
+            <line x1="310" y1="355" x2="310" y2="380" stroke="#334155" stroke-width="2" />
+            <circle cx="310" cy="405" r="25" fill="#3b82f6" fill-opacity="0.1" stroke="#3b82f6" stroke-width="2.5" />
+            <text x="310" y="412" text-anchor="middle" font-size="18" font-weight="bold" fill="#2563eb">M</text>
+            <text x="310" y="442" text-anchor="middle" font-size="11" font-weight="bold" fill="currentColor">Motor DC</text>
+            <text x="310" y="454" text-anchor="middle" font-size="9" fill="#64748b">3V Hobby (con hélice)</text>
+            <line x1="310" y1="430" x2="310" y2="465" stroke="#334155" stroke-width="2" />
+          </g>
+
+          <!-- Branch 3: C1 Ceramic Disc Cap (Lenteja) -->
+          <g id="comp-capacitor" class="cursor-pointer" onclick="showDetails('capacitor')">
+            <line x1="400" y1="355" x2="400" y2="395" stroke="#334155" stroke-width="2" />
+            <!-- Capacitor plates -->
+            <line x1="388" y1="395" x2="412" y2="395" stroke="#d97706" stroke-width="3" />
+            <line x1="388" y1="403" x2="412" y2="403" stroke="#d97706" stroke-width="3" />
+            <line x1="400" y1="403" x2="400" y2="465" stroke="#334155" stroke-width="2" />
+            <text x="420" y="398" font-size="10" font-weight="bold" fill="#d97706">C1 (Lenteja)</text>
+            <text x="420" y="411" font-size="8.5" fill="#64748b">100nF (0.1µF)</text>
+            <text x="420" y="423" font-size="8.5" fill="#10b981">Filtro EMI/Ruido</text>
+          </g>
+
+          <!-- Bottom rail of motor parallel stage -->
+          <line x1="220" y1="465" x2="400" y2="465" stroke="#64748b" stroke-width="2.5" />
+          <circle cx="220" cy="465" r="4" fill="#64748b" />
+          <circle cx="310" cy="465" r="4" fill="#64748b" />
+          <circle cx="400" cy="465" r="4" fill="#64748b" />
+          
+          <!-- Wire from Motor (-) to Transistor Collector (Grey wire in physical circuit) -->
+          <line x1="310" y1="465" x2="310" y2="520" stroke="#64748b" stroke-width="2.5" />
+          <text x="320" y="495" font-size="9.5" font-style="italic" fill="#64748b">Cable gris (Lado bajo)</text>
+
+          <!-- ==================== TRANSISTOR NPN 2N2222 ==================== -->
+          <g id="comp-transistor" class="cursor-pointer" onclick="showDetails('transistor')">
+            <!-- Transistor Circle -->
+            <circle cx="310" cy="555" r="30" fill="none" stroke="#475569" stroke-width="1.5" stroke-dasharray="3,3" />
+            
+            <!-- Base Bar -->
+            <line x1="295" y1="538" x2="295" y2="572" stroke="#1e293b" stroke-width="3.5" />
+            
+            <!-- Collector Pin (top) -->
+            <line x1="310" y1="520" x2="310" y2="538" stroke="#1e293b" stroke-width="2" />
+            <line x1="310" y1="538" x2="295" y2="547" stroke="#1e293b" stroke-width="2" />
+            <text x="318" y="534" font-size="11" font-weight="bold" fill="currentColor">C</text>
+
+            <!-- Emitter Pin (bottom, with arrow) -->
+            <line x1="295" y1="563" x2="310" y2="572" stroke="#1e293b" stroke-width="2" />
+            <line x1="310" y1="572" x2="310" y2="610" stroke="#1e293b" stroke-width="2" />
+            <polygon points="307,564 314,574 303,573" fill="#1e293b" />
+            <text x="318" y="595" font-size="11" font-weight="bold" fill="currentColor">E</text>
+
+            <!-- Base Pin (middle left) -->
+            <line x1="295" y1="555" x2="260" y2="555" stroke="#2563eb" stroke-width="2.5" />
+            <text x="278" y="548" font-size="11" font-weight="bold" fill="#2563eb">B</text>
+
+            <text x="350" y="555" font-size="13" font-weight="bold" fill="currentColor">Q1 (2N2222A)</text>
+            <text x="350" y="570" font-size="10" fill="#64748b">NPN TO-18 Metálico</text>
+            <text x="350" y="583" font-size="9" fill="#10b981">Conmutador Lado Bajo</text>
+          </g>
+
+          <!-- Transistor Emitter to GND -->
+          <circle cx="310" cy="610" r="4" fill="#0f172a" />
+          <line x1="310" y1="610" x2="310" y2="640" stroke="#0f172a" stroke-width="2.5" />
+          <!-- GND symbol -->
+          <line x1="296" y1="640" x2="324" y2="640" stroke="#0f172a" stroke-width="2.5" />
+          <line x1="301" y1="645" x2="319" y2="645" stroke="#0f172a" stroke-width="2" />
+          <line x1="306" y1="650" x2="314" y2="650" stroke="#0f172a" stroke-width="1.5" />
+
+          <!-- ==================== BASE RESISTOR R1 ==================== -->
+          <g id="comp-resistor" class="cursor-pointer" onclick="showDetails('resistor')">
+            <!-- Wire from base left then up to R1 level -->
+            <line x1="260" y1="555" x2="260" y2="280" stroke="#2563eb" stroke-width="2.5" />
+            <line x1="260" y1="280" x2="480" y2="280" stroke="#2563eb" stroke-width="2.5" />
+            
+            <!-- Resistor Body -->
+            <rect x="480" y="272" width="60" height="16" rx="3" fill="#fef08a" stroke="#ca8a04" stroke-width="1.5" />
+            <!-- Color bands: Brown, Black, Red, Gold -->
+            <rect x="490" y="272" width="4" height="16" fill="#854d0e" />
+            <rect x="500" y="272" width="4" height="16" fill="#0f172a" />
+            <rect x="510" y="272" width="4" height="16" fill="#ef4444" />
+            <rect x="524" y="272" width="4" height="16" fill="#eab308" />
+            
+            <text x="510" y="263" text-anchor="middle" font-size="11" font-weight="bold" fill="#2563eb">R1 (1 kΩ)</text>
+            <text x="510" y="302" text-anchor="middle" font-size="9" fill="#64748b">Resistor de Base</text>
+
+            <!-- Wire from R1 to ESP32 D19 -->
+            <line x1="540" y1="280" x2="620" y2="280" stroke="#2563eb" stroke-width="2.5" />
+          </g>
+
+          <!-- ==================== ESP32 MICROCONTROLLER ==================== -->
+          <g id="comp-esp32" class="cursor-pointer" onclick="showDetails('esp32')">
+            <!-- Board body -->
+            <rect x="620" y="100" width="180" height="520" rx="14" fill="#0f172a" stroke="#334155" stroke-width="3" />
+            
+            <!-- PCB Antenna -->
+            <rect x="655" y="115" width="110" height="40" rx="4" fill="#1e293b" />
+            <path d="M 665 145 L 665 125 L 680 125 L 680 145 L 695 145 L 695 125 L 710 125 L 710 145 L 725 145 L 725 125 L 740 125 L 740 145" fill="none" stroke="#eab308" stroke-width="2" />
+            
+            <!-- Metal RF Shield -->
+            <rect x="645" y="170" width="130" height="120" rx="6" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2" />
+            <text x="710" y="200" text-anchor="middle" font-size="12" font-weight="bold" fill="#0f172a">ESP-WROOM-32</text>
+            <text x="710" y="218" text-anchor="middle" font-size="9" fill="#475569">Wi-Fi &amp; Bluetooth</text>
+            <text x="710" y="235" text-anchor="middle" font-size="8" fill="#64748b">CE / FCC ID</text>
+
+            <!-- Status LEDs / Components -->
+            <circle cx="660" cy="315" r="4" fill="#ef4444" />
+            <rect x="680" y="310" width="30" height="15" rx="2" fill="#334155" />
+            <circle cx="730" cy="315" r="4" fill="#3b82f6" />
+
+            <!-- Micro USB Port at bottom -->
+            <rect x="670" y="595" width="80" height="25" rx="4" fill="#64748b" stroke="#94a3b8" stroke-width="1.5" />
+            <text x="710" y="612" text-anchor="middle" font-size="9" font-weight="bold" fill="#f8fafc">Micro-USB</text>
+
+            <!-- LEFT PINS -->
+            <!-- GPIO 19 (D19) at y=280 -->
+            <circle cx="620" cy="280" r="5" fill="#2563eb" />
+            <text x="632" y="284" font-size="10" font-weight="bold" fill="#93c5fd">D19 (GPIO 19)</text>
+
+            <!-- ESP32 GND (Left Bottom) at y=560 -->
+            <circle cx="620" cy="560" r="5" fill="#94a3b8" />
+            <text x="632" y="564" font-size="10" font-weight="bold" fill="#f1f5f9">GND</text>
+
+            <!-- RIGHT PINS -->
+            <!-- GPIO 4 (D4) at y=360 -->
+            <circle cx="800" cy="360" r="5" fill="#f97316" />
+            <text x="788" y="364" text-anchor="end" font-size="10" font-weight="bold" fill="#fdba74">D4 (GPIO 4)</text>
+
+            <!-- 3V3 at y=430 -->
+            <circle cx="800" cy="430" r="5" fill="#ef4444" />
+            <text x="788" y="434" text-anchor="end" font-size="10" font-weight="bold" fill="#fca5a5">3V3</text>
+
+            <!-- GND Right at y=500 -->
+            <circle cx="800" cy="500" r="5" fill="#94a3b8" />
+            <text x="788" y="504" text-anchor="end" font-size="10" font-weight="bold" fill="#f1f5f9">GND</text>
+          </g>
+
+          <!-- ESP32 GND to Common GND Bus -->
+          <line x1="620" y1="560" x2="570" y2="560" stroke="#0f172a" stroke-width="2.5" />
+          <line x1="570" y1="560" x2="570" y2="640" stroke="#0f172a" stroke-width="2.5" />
+          <line x1="570" y1="640" x2="310" y2="640" stroke="#0f172a" stroke-width="2.5" />
+          <circle cx="570" cy="560" r="4" fill="#0f172a" />
+          <circle cx="310" cy="640" r="4" fill="#0f172a" />
+
+          <!-- Power Supply GND connection to Common GND Bus -->
+          <line x1="170" y1="195" x2="190" y2="195" stroke="#0f172a" stroke-width="2.5" />
+          <line x1="190" y1="195" x2="190" y2="640" stroke="#0f172a" stroke-width="2.5" />
+          <line x1="190" y1="640" x2="310" y2="640" stroke="#0f172a" stroke-width="2.5" />
+          <circle cx="190" cy="640" r="4" fill="#0f172a" />
+          <text x="210" y="632" font-size="10" font-weight="bold" fill="#0f172a">GND Común Unificado</text>
+
+          <!-- ==================== DHT11 SENSOR ==================== -->
+          <g id="comp-dht11" class="cursor-pointer" onclick="showDetails('dht11')">
+            <!-- Breakout PCB -->
+            <rect x="940" y="310" width="150" height="230" rx="8" fill="#1e293b" stroke="#3b82f6" stroke-width="2" />
+            
+            <!-- Blue Perforated Housing -->
+            <rect x="965" y="330" width="100" height="90" rx="6" fill="#38bdf8" stroke="#0284c7" stroke-width="2" />
+            <!-- Sensor grill holes -->
+            <circle cx="985" cy="350" r="2.5" fill="#0284c7" />
+            <circle cx="1000" cy="350" r="2.5" fill="#0284c7" />
+            <circle cx="1015" cy="350" r="2.5" fill="#0284c7" />
+            <circle cx="1030" cy="350" r="2.5" fill="#0284c7" />
+            <circle cx="1045" cy="350" r="2.5" fill="#0284c7" />
+            
+            <circle cx="985" cy="365" r="2.5" fill="#0284c7" />
+            <circle cx="1000" cy="365" r="2.5" fill="#0284c7" />
+            <circle cx="1015" cy="365" r="2.5" fill="#0284c7" />
+            <circle cx="1030" cy="365" r="2.5" fill="#0284c7" />
+            <circle cx="1045" cy="365" r="2.5" fill="#0284c7" />
+            
+            <text x="1015" y="395" text-anchor="middle" font-size="14" font-weight="bold" fill="#0f172a">DHT11</text>
+
+            <text x="1015" y="445" text-anchor="middle" font-size="11" font-weight="bold" fill="#f8fafc">SENSOR AMBIENTAL</text>
+            <text x="1015" y="460" text-anchor="middle" font-size="9" fill="#94a3b8">Humedad &amp; Temp</text>
+
+            <!-- DHT11 Pins on Left -->
+            <!-- Pin 1: VCC (Top) at y=430 -->
+            <circle cx="940" cy="430" r="5" fill="#ef4444" />
+            <text x="955" y="434" font-size="10" font-weight="bold" fill="#ef4444">VCC (+)</text>
+
+            <!-- Pin 2: DATA (Middle) at y=360 -->
+            <circle cx="940" cy="360" r="5" fill="#f97316" />
+            <text x="955" y="364" font-size="10" font-weight="bold" fill="#f97316">DATA (S)</text>
+
+            <!-- Pin 3: GND (Bottom) at y=500 -->
+            <circle cx="940" cy="500" r="5" fill="#94a3b8" />
+            <text x="955" y="504" font-size="10" font-weight="bold" fill="#94a3b8">GND (-)</text>
+          </g>
+
+          <!-- Wiring ESP32 to DHT11 -->
+          <!-- 1. DATA line: ESP32 D4 (800, 360) to DHT11 DATA (940, 360) -->
+          <line x1="800" y1="360" x2="940" y2="360" stroke="#f97316" stroke-width="2.5" />
+          <circle cx="800" cy="360" r="4" fill="#f97316" />
+          <circle cx="940" cy="360" r="4" fill="#f97316" />
+          <text x="870" y="352" text-anchor="middle" font-size="10" font-weight="bold" fill="#ea580c">Línea de Datos (GPIO 4)</text>
+
+          <!-- 2. VCC line: ESP32 3V3 (800, 430) to DHT11 VCC (940, 430) -->
+          <line x1="800" y1="430" x2="940" y2="430" stroke="#ef4444" stroke-width="2.5" />
+          <circle cx="800" cy="430" r="4" fill="#ef4444" />
+          <circle cx="940" cy="430" r="4" fill="#ef4444" />
+          <text x="870" y="422" text-anchor="middle" font-size="10" font-weight="bold" fill="#ef4444">Alimentación 3.3V</text>
+
+          <!-- 3. GND line: ESP32 GND (800, 500) to DHT11 GND (940, 500) -->
+          <line x1="800" y1="500" x2="940" y2="500" stroke="#0f172a" stroke-width="2.5" />
+          <circle cx="800" cy="500" r="4" fill="#0f172a" />
+          <circle cx="940" cy="500" r="4" fill="#0f172a" />
+          <text x="870" y="492" text-anchor="middle" font-size="10" font-weight="bold" fill="#64748b">Retorno GND</text>
+
+        </svg>
+      </div>
+      <p class="text-xs text-[var(--muted-foreground)] text-center mt-3">
+        💡 <strong>Tip interactivo:</strong> Haz clic en cualquier componente del diagrama para ver su función técnica detallada, pines y consideraciones eléctricas.
+      </p>
+    </div>
+
+    <!-- Interactive Component Detail Inspector Card -->
+    <div id="inspector-card" class="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 shadow-sm transition-all duration-300">
+      <div id="inspector-content">
+        <h3 class="text-lg font-bold flex items-center gap-2">
+          <span>🔍</span> Inspector de Componentes
+        </h3>
+        <p class="text-sm text-[var(--muted-foreground)] mt-1">
+          Selecciona un componente en el diagrama superior o revisa la lista de materiales y análisis de conexiones a continuación.
+        </p>
+      </div>
+    </div>
+
+    <!-- Quick Component Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      
+      <!-- Card 1: Diodos Reductores -->
+      <div class="component-card bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 cursor-pointer transition" onclick="showDetails('diodes')">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold px-2 py-0.5 rounded bg-amber-500/10 text-amber-500">D1 - D4</span>
+          <span class="text-xs text-[var(--muted-foreground)]">4x Silicio</span>
+        </div>
+        <h4 class="font-bold text-base mt-2">Diodos Reductores de Voltaje</h4>
+        <p class="text-xs text-[var(--muted-foreground)] mt-1">
+          4 diodos en serie restan ~0.7V c/u (&Sigma; = 2.8V). Bajan los 5V USB a ~2.2V para proteger el motor de 3V.
+        </p>
+      </div>
+
+      <!-- Card 2: Flyback & Capacitor -->
+      <div class="component-card bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 cursor-pointer transition" onclick="showDetails('motor_protection')">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500">D5 + C1</span>
+          <span class="text-xs text-[var(--muted-foreground)]">Protección</span>
+        </div>
+        <h4 class="font-bold text-base mt-2">Diodo Flyback y Filtro Lenteja</h4>
+        <p class="text-xs text-[var(--muted-foreground)] mt-1">
+          D5 en antiparalelo disipa picos inductivos (f.c.e.m.). C1 (100nF) suprime el ruido EMI de las escobillas.
+        </p>
+      </div>
+
+      <!-- Card 3: Driver NPN -->
+      <div class="component-card bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 cursor-pointer transition" onclick="showDetails('transistor')">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold px-2 py-0.5 rounded bg-blue-500/10 text-blue-500">Q1 + R1</span>
+          <span class="text-xs text-[var(--muted-foreground)]">Driver</span>
+        </div>
+        <h4 class="font-bold text-base mt-2">Transistor 2N2222A (TO-18)</h4>
+        <p class="text-xs text-[var(--muted-foreground)] mt-1">
+          Conmutador Low-Side controlado desde GPIO 19 mediante resistor de base de 1 k&Omega; (I<sub>B</sub> &asymp; 2.6 mA).
+        </p>
+      </div>
+
+      <!-- Card 4: ESP32 -->
+      <div class="component-card bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 cursor-pointer transition" onclick="showDetails('esp32')">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold px-2 py-0.5 rounded bg-purple-500/10 text-purple-500">MCU</span>
+          <span class="text-xs text-[var(--muted-foreground)]">30 Pines</span>
+        </div>
+        <h4 class="font-bold text-base mt-2">ESP32 DevKit V1</h4>
+        <p class="text-xs text-[var(--muted-foreground)] mt-1">
+          Controlador principal. GPIO 19 conmuta el motor; GPIO 4 adquiere telemetría digital de temperatura y humedad.
+        </p>
+      </div>
+
+      <!-- Card 5: DHT11 -->
+      <div class="component-card bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 cursor-pointer transition" onclick="showDetails('dht11')">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold px-2 py-0.5 rounded bg-sky-500/10 text-sky-500">Sensor</span>
+          <span class="text-xs text-[var(--muted-foreground)]">1-Wire Digital</span>
+        </div>
+        <h4 class="font-bold text-base mt-2">Sensor DHT11</h4>
+        <p class="text-xs text-[var(--muted-foreground)] mt-1">
+          Alimentado a 3.3V desde el ESP32. Envía lecturas de temperatura (0-50°C) y humedad relativa (20-90%).
+        </p>
+      </div>
+
+      <!-- Card 6: Fuente de Poder -->
+      <div class="component-card bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 cursor-pointer transition" onclick="showDetails('powersupply')">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold px-2 py-0.5 rounded bg-red-500/10 text-red-500">Alimentación</span>
+          <span class="text-xs text-[var(--muted-foreground)]">5V DC</span>
+        </div>
+        <h4 class="font-bold text-base mt-2">Cargador 5V USB</h4>
+        <p class="text-xs text-[var(--muted-foreground)] mt-1">
+          Suministra potencia para la rama motora. GND común enlazado al ESP32 para referencia de control estable.
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Pinout & Connection Mapping Table -->
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 shadow-sm">
+      <h3 class="text-lg font-bold mb-4">Tabla Completa de Conexiones y Asignación de Pines</h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm border-collapse">
+          <thead>
+            <tr class="border-b border-[var(--border)] text-[var(--muted-foreground)] text-xs uppercase">
+              <th class="py-2.5 px-3">Componente Origen</th>
+              <th class="py-2.5 px-3">Pin / Terminal</th>
+              <th class="py-2.5 px-3">Color Cable</th>
+              <th class="py-2.5 px-3">Componente Destino</th>
+              <th class="py-2.5 px-3">Pin / Terminal</th>
+              <th class="py-2.5 px-3">Función / Señal</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[var(--border)]">
+            <tr>
+              <td class="py-2.5 px-3 font-semibold">Fuente 5V USB</td>
+              <td class="py-2.5 px-3 text-red-500 font-mono">+5V (VCC)</td>
+              <td class="py-2.5 px-3"><span class="inline-block w-3 h-3 rounded-full bg-red-500 mr-1.5 align-middle"></span>Rojo</td>
+              <td class="py-2.5 px-3 font-semibold">Diodo D1</td>
+              <td class="py-2.5 px-3 font-mono">Ánodo</td>
+              <td class="py-2.5 px-3 text-xs text-[var(--muted-foreground)]">Alimentación rama motor</td>
+            </tr>
+            <tr>
+              <td class="py-2.5 px-3 font-semibold">D1 &rarr; D2 &rarr; D3</td>
+              <td class="py-2.5 px-3 font-mono">Cátodo D(n)</td>
+              <td class="py-2.5 px-3"><span class="inline-block w-3 h-3 rounded-full bg-slate-500 mr-1.5 align-middle"></span>Gris/Negro</td>
+              <td class="py-2.5 px-3 font-semibold">D2 &rarr; D3 &rarr; D4</td>
+              <td class="py-2.5 px-3 font-mono">Ánodo D(n+1)</td>
+              <td class="py-2.5 px-3 text-xs text-[var(--muted-foreground)]">Reducción en serie (4x ~0.7V = 2.8V drop)</td>
+            </tr>
+            <tr>
+              <td class="py-2.5 px-3 font-semibold">Diodo D4</td>
+              <td class="py-2.5 px-3 font-mono">Cátodo</td>
+              <td class="py-2.5 px-3"><span class="inline-block w-3 h-3 rounded-full bg-red-500 mr-1.5 align-middle"></span>Rojo</td>
+              <td class="py-2.5 px-3 font-semibold">Motor DC</td>
+              <td class="py-2.5 px-3 text-red-500 font-mono">Borne Positivo (+)</td>
+              <td class="py-2.5 px-3 text-xs text-[var(--muted-foreground)]">Tensión reducida (~2.2V - 2.5V)</td>
+            </tr>
+            <tr>
+              <td class="py-2.5 px-3 font-semibold">D5 (Flyback)</td>
+              <td class="py-2.5 px-3 font-mono">Cátodo (Banda)</td>
+              <td class="py-2.5 px-3 font-mono text-xs">Directo</td>
+              <td class="py-2.5 px-3 font-semibold">Motor DC</td>
+              <td class="py-2.5 px-3 text-red-500 font-mono">Borne Positivo (+)</td>
+              <td class="py-2.5 px-3 text-xs text-[var(--muted-foreground)]">Antiparalelo para disipar f.c.e.m.</td>
+            </tr>
+            <tr>
+              <td class="py-2.5 px-3 font-semibold">D5 (Flyback)</td>
+              <td class="py-2.5 px-3 font-mono">Ánodo</td>
+              <td class="py-2.5 px-3 font-mono text-xs">Directo</td>
+              <td class="py-2.5 px-3 font-semibold">Motor DC</td>
+              <td class="py-2.5 px-3 text-slate-500 font-mono">Borne Negativo (-)</td>
+              <td class="py-2.5 px-3 text-xs text-[var(--muted-foreground)]">Retorno de corriente inductiva</td>
+            </tr>
+            <tr>
+              <td class="py-2.5 px-3 font-semibold">C1 (Lenteja)</td>
+              <td class="py-2.5 px-3 font-mono">Terminal 1 y 2</td>
+              <td class="py-2.5 px-3 font-mono text-xs">Directo</td>
+              <td class="py-2.5 px-3 font-semibold">Motor DC</td>
+              <td class="py-2.5 px-3 font-mono">(+) y (-)</td>
+              <td class="py-2.5 px-3 text-xs text-[var(--muted-foreground)]">Supresión de chispas y ruidos de escobillas</td>
+            </tr>
+            <tr>
+              <td class="py-2.5 px-3 font-semibold">Motor DC</td>
+              <td class="py-2.5 px-3 font-mono">Borne Negativo (-)</td>
+              <td class="py-2.5 px-3"><span class="inline-block w-3 h-3 rounded-full bg-slate-400 mr-1.5 align-middle"></span>Gris</td>
+              <td class="py-2.5 px-3 font-semibold">Transistor Q1</td>
+              <td class="py-2.5 px-3 font-mono">Colector (C)</td>
+              <td class="py-2.5 px-3 text-xs text-[var(--muted-foreground)]">Conmutación de lado bajo (Low-side)</td>
+            </tr>
+            <tr>
+              <td class="py-2.5 px-3 font-semibold">Transistor Q1</td>
+              <td class="py-2.5 px-3 font-mono">Emisor (E)</td>
+              <td class="py-2.5 px-3"><span class="inline-block w-3 h-3 rounded-full bg-black mr-1.5 align-middle"></span>Negro</td>
+              <td class="py-2.5 px-3 font-semibold">GND Común</td>
+              <td class="py-2.5 px-3 font-mono">GND (Fuente / ESP32)</td>
+              <td class="py-2.5 px-3 text-xs text-[var(--muted-foreground)]">Retorno a tierra común</td>
+            </tr>
+            <tr>
+              <td class="py-2.5 px-3 font-semibold">ESP32 DevKit</td>
+              <td class="py-2.5 px-3 text-blue-500 font-mono">GPIO 19 (D19)</td>
+              <td class="py-2.5 px-3"><span class="inline-block w-3 h-3 rounded-full bg-blue-500 mr-1.5 align-middle"></span>Azul</td>
+              <td class="py-2.5 px-3 font-semibold">Resistor R1</td>
+              <td class="py-2.5 px-3 font-mono">Extremo 1</td>
+              <td class="py-2.5 px-3 text-xs text-[var(--muted-foreground)]">Señal lógica de control (ON/OFF o PWM)</td>
+            </tr>
+            <tr>
+              <td class="py-2.5 px-3 font-semibold">Resistor R1</td>
+              <td class="py-2.5 px-3 font-mono">Extremo 2</td>
+              <td class="py-2.5 px-3"><span class="inline-block w-3 h-3 rounded-full bg-blue-500 mr-1.5 align-middle"></span>Azul</td>
+              <td class="py-2.5 px-3 font-semibold">Transistor Q1</td>
+              <td class="py-2.5 px-3 font-mono">Base (B)</td>
+              <td class="py-2.5 px-3 text-xs text-[var(--muted-foreground)]">Limitación de corriente de base (~2.6 mA)</td>
+            </tr>
+            <tr>
+              <td class="py-2.5 px-3 font-semibold">ESP32 DevKit</td>
+              <td class="py-2.5 px-3 text-orange-500 font-mono">GPIO 4 (D4)</td>
+              <td class="py-2.5 px-3"><span class="inline-block w-3 h-3 rounded-full bg-orange-500 mr-1.5 align-middle"></span>Naranja</td>
+              <td class="py-2.5 px-3 font-semibold">Sensor DHT11</td>
+              <td class="py-2.5 px-3 font-mono">Pin DATA / S</td>
+              <td class="py-2.5 px-3 text-xs text-[var(--muted-foreground)]">Protocolo digital unifilar (1-Wire DHT)</td>
+            </tr>
+            <tr>
+              <td class="py-2.5 px-3 font-semibold">ESP32 DevKit</td>
+              <td class="py-2.5 px-3 text-red-500 font-mono">3V3 (3.3V Out)</td>
+              <td class="py-2.5 px-3"><span class="inline-block w-3 h-3 rounded-full bg-red-500 mr-1.5 align-middle"></span>Rojo</td>
+              <td class="py-2.5 px-3 font-semibold">Sensor DHT11</td>
+              <td class="py-2.5 px-3 text-red-500 font-mono">Pin VCC (+)</td>
+              <td class="py-2.5 px-3 text-xs text-[var(--muted-foreground)]">Alimentación lógica de 3.3V para DHT11</td>
+            </tr>
+            <tr>
+              <td class="py-2.5 px-3 font-semibold">ESP32 DevKit</td>
+              <td class="py-2.5 px-3 font-mono">GND (Pin Der.)</td>
+              <td class="py-2.5 px-3"><span class="inline-block w-3 h-3 rounded-full bg-black mr-1.5 align-middle"></span>Negro</td>
+              <td class="py-2.5 px-3 font-semibold">Sensor DHT11</td>
+              <td class="py-2.5 px-3 font-mono">Pin GND (-)</td>
+              <td class="py-2.5 px-3 text-xs text-[var(--muted-foreground)]">Referencia de tierra del sensor</td>
+            </tr>
+            <tr>
+              <td class="py-2.5 px-3 font-semibold">Fuente 5V USB</td>
+              <td class="py-2.5 px-3 font-mono">GND (Negativo)</td>
+              <td class="py-2.5 px-3"><span class="inline-block w-3 h-3 rounded-full bg-black mr-1.5 align-middle"></span>Negro</td>
+              <td class="py-2.5 px-3 font-semibold">ESP32 DevKit</td>
+              <td class="py-2.5 px-3 font-mono">GND (Pin Izq.)</td>
+              <td class="py-2.5 px-3 text-xs text-[var(--muted-foreground)]">Masa unificada obligatoria</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let scale = 1;
+    const svg = document.getElementById('schematic-svg');
+
+    function zoomIn() {
+      scale = Math.min(scale + 0.15, 2.0);
+      svg.style.transform = `scale(${scale})`;
+    }
+    function zoomOut() {
+      scale = Math.max(scale - 0.15, 0.7);
+      svg.style.transform = `scale(${scale})`;
+    }
+    function resetZoom() {
+      scale = 1;
+      svg.style.transform = `scale(1)`;
+    }
+
+    const detailsData = {
+      powersupply: {
+        title: "Fuente de Alimentación Externa 5V DC (Cargador USB)",
+        badge: "5V DC / GND",
+        badgeColor: "bg-red-500/10 text-red-500",
+        description: "Transformador o cargador de teléfono estándar de 5V DC conectado a la red eléctrica doméstica. Proporciona la potencia principal para el motor.",
+        points: [
+          "<strong>Positivo (+5V):</strong> Se conecta a la cadena reductora de 4 diodos (ánodo de D1).",
+          "<strong>Negativo (GND):</strong> Se conecta directamente al Emisor de Q1 y al pin GND del ESP32, unificando el plano de referencia.",
+          "<strong>Importante:</strong> El ESP32 se alimenta vía su conector micro-USB, o alternativamente compartiendo los 5V hacia el pin VIN (5V) del microcontrolador."
+        ]
+      },
+      diodes: {
+        title: "Reductor de Voltaje: 4 Diodos de Silicio en Serie (D1 - D4)",
+        badge: "Caída ≈ 2.8V",
+        badgeColor: "bg-amber-500/10 text-amber-500",
+        description: "Configuración ingeniosa para reducir voltaje sin usar un regulador lineal voluminoso.",
+        points: [
+          "<strong>Cálculo:</strong> Cada diodo de silicio estándar (ej. 1N4001 a 1N4007) presenta una caída de tensión en polarización directa de <code>V<sub>F</sub> &asymp; 0.7V</code>.",
+          "<strong>Tensión resultante:</strong> <code>V<sub>Motor</sub> = 5.0V - (4 &times; 0.7V) &asymp; 2.2V - 2.5V</code> bajo carga típica.",
+          "<strong>Objetivo:</strong> Evita quemar el motor hobby de 3V, limitando las revoluciones a un rango de trabajo seguro y prolongando la vida útil de sus escobillas."
+        ]
+      },
+      flyback: {
+        title: "Diodo de Rueda Libre / Flyback (D5)",
+        badge: "Protección Inductiva",
+        badgeColor: "bg-emerald-500/10 text-emerald-500",
+        description: "Diodo conectado en antiparalelo (cátodo al positivo, ánodo al colector) directamente en las terminales del motor.",
+        points: [
+          "<strong>Principio físico:</strong> Las bobinas del motor almacenan energía magnética. Cuando el transistor se apaga súbitamente, la derivada de corriente <code>L &times; (di/dt)</code> genera un pico de tensión inversa muy alto (f.c.e.m.).",
+          "<strong>Protección:</strong> El diodo entra en conducción directa durante ese pulso inverso, recirculando y amortiguando la energía de forma segura.",
+          "<strong>Consecuencia de omitirlo:</strong> Sin este diodo, el pico de tensión supera la tensión de ruptura <code>V<sub>CEO</sub></code> del transistor (40V en 2N2222), destruyéndolo instantáneamente."
+        ]
+      },
+      capacitor: {
+        title: "Capacitor Cerámico tipo Lenteja (C1 - 100nF)",
+        badge: "Filtro EMI / RF",
+        badgeColor: "bg-amber-500/10 text-amber-500",
+        description: "Condensador cerámico no polarizado de disco ('lenteja', valor típico de 100 nF / código 104) soldado entre los bornes del motor.",
+        points: [
+          "<strong>Función:</strong> Suprime el chisporroteo inductivo generado por las escobillas mecánicas al rozar las delgas del colector rotativo.",
+          "<strong>Inmunidad electromagnética:</strong> Evita que las interferencias de radiofrecuencia (EMI) se propaguen por los cables y provoquen reinicios espontáneos (resets) o lecturas erráticas en el ESP32 y el bus del DHT11."
+        ]
+      },
+      motor: {
+        title: "Motor DC con Hélice (Tipo 130)",
+        badge: "Carga Inductiva",
+        badgeColor: "bg-blue-500/10 text-blue-500",
+        description: "Pequeño motor de corriente continua de imán permanente utilizado comúnmente en proyectos de ventilación, robótica o maquetas.",
+        points: [
+          "<strong>Tensión nominal:</strong> 1.5V a 3.0V DC.",
+          "<strong>Corriente de operación:</strong> ~150 mA - 350 mA (corriente de arranque/bloqueo de hasta 800 mA).",
+          "<strong>Control:</strong> Conectado en configuración Low-Side; su velocidad se puede regular modularmente por PWM desde el GPIO 19."
+        ]
+      },
+      motor_protection: {
+        title: "Subconjunto Motor + Flyback + Capacitor Lenteja",
+        badge: "Filtrado Integral",
+        badgeColor: "bg-emerald-500/10 text-emerald-500",
+        description: "El ensamble en los bornes del motor combina la acción del diodo D5 y el capacitor C1 para un control seguro y silencioso.",
+        points: [
+          "<strong>Diodo D5:</strong> Cátodo a V+ motor, Ánodo a Colector Q1.",
+          "<strong>Capacitor C1:</strong> En paralelo a ambos bornes (entre V+ y Colector).",
+          "<strong>Buena práctica cumplida:</strong> Tener estos dos componentes soldados directamente sobre los bornes físicos del motor minimiza la inductancia parásita de los cables largos."
+        ]
+      },
+      transistor: {
+        title: "Transistor BJT NPN (2N2222A en Cápsula Metálica TO-18)",
+        badge: "Driver Low-Side",
+        badgeColor: "bg-blue-500/10 text-blue-500",
+        description: "Transistor bipolar NPN clásico de alta velocidad y propósito general en encapsulado metálico de alta disipación térmica (TO-18).",
+        points: [
+          "<strong>Pinout TO-18:</strong> Mirando desde abajo con la pestaña de referencia a la izquierda: Pin 1 (junto a pestaña) = Emisor (GND), Pin 2 = Base, Pin 3 = Colector (al motor).",
+          "<strong>Modo de operación:</strong> Conmutación en saturación (Interruptor electrónico).",
+          "<strong>Parámetros clave:</strong> Corriente máxima de colector <code>I<sub>C(max)</sub> = 800 mA</code>, tensión máxima <code>V<sub>CEO</sub> = 40V</code>."
+        ]
+      },
+      resistor: {
+        title: "Resistor de Base R1 (1 kΩ - 1/4W)",
+        badge: "Limitador de Base",
+        badgeColor: "bg-yellow-500/10 text-yellow-500",
+        description: "Resistor con código de colores Marrón-Negro-Rojo-Oro (1 kΩ &plusmn;5%).",
+        points: [
+          "<strong>Cálculo de corriente de base:</strong> Con salida lógica alta del ESP32 (<code>V<sub>OH</sub> &asymp; 3.3V</code>) y <code>V<sub>BE(sat)</sub> &asymp; 0.7V</code>:<br><code>I<sub>B</sub> = (3.3V - 0.7V) / 1000 &Omega; = 2.6 mA</code>.",
+          "<strong>Saturación garantizada:</strong> Para una ganancia forzada en saturación <code>&beta;<sub>sat</sub> &asymp; 10</code> a <code>20</code>, permite conmutar hasta <code>I<sub>C</sub> &asymp; 26 mA - 52 mA</code> en saturación profunda, o más de 200 mA en región activa/saturación moderada.",
+          "<strong>Protección del ESP32:</strong> Limita la corriente que drena el pin GPIO 19 a un valor muy seguro (máximo permitido por GPIO es 12-20 mA)."
+        ]
+      },
+      esp32: {
+        title: "Microcontrolador ESP32 DevKit V1 (30 Pines)",
+        badge: "Cerebro del Sistema",
+        badgeColor: "bg-purple-500/10 text-purple-500",
+        description: "Módulo microcontrolador dual-core Tensilica Xtensa LX6 con Wi-Fi y Bluetooth integrados.",
+        points: [
+          "<strong>GPIO 19 (D19):</strong> Configurado como salida digital (OUTPUT) o canal PWM (LEDC) para regular la marcha del ventilador.",
+          "<strong>GPIO 4 (D4):</strong> Configurado como entrada/salida digital bidireccional para el protocolo 1-Wire del DHT11.",
+          "<strong>Pin 3V3:</strong> Salida regulada de 3.3V alimentando el sensor DHT11.",
+          "<strong>Pin GND:</strong> Interconectado con el GND de la fuente externa de 5V y el emisor de Q1."
+        ]
+      },
+      dht11: {
+        title: "Sensor Digital de Temperatura y Humedad DHT11",
+        badge: "Sensor Ambiental",
+        badgeColor: "bg-sky-500/10 text-sky-500",
+        description: "Módulo comercial de 3 pines con sensor capacitivo de humedad y termistor NTC.",
+        points: [
+          "<strong>Rango de medición:</strong> Humedad: 20% a 90% RH (&plusmn;5%); Temperatura: 0°C a 50°C (&plusmn;2°C).",
+          "<strong>Alimentación:</strong> Operando a 3.3V (compatible directo con lógica del ESP32 sin level shifters).",
+          "<strong>Pinout común de módulo:</strong> Pin 1: VCC (a 3V3), Pin 2: DATA (a GPIO 4), Pin 3: GND (a GND). Incorpora resistor pull-up en el PCB."
+        ]
+      }
+    };
+
+    function showDetails(key) {
+      const data = detailsData[key];
+      if (!data) return;
+
+      const inspector = document.getElementById('inspector-content');
+      let pointsHtml = data.points.map(p => `<li class="flex items-start gap-2"><span class="text-blue-500 mt-1">•</span><div>${p}</div></li>`).join('');
+
+      inspector.innerHTML = `
+        <div class="space-y-3">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <h3 class="text-lg font-bold text-[var(--foreground)]">${data.title}</h3>
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full ${data.badgeColor}">${data.badge}</span>
+          </div>
+          <p class="text-sm text-[var(--muted-foreground)]">${data.description}</p>
+          <ul class="text-xs text-[var(--foreground)] space-y-2 mt-2 bg-[var(--background)] p-3 rounded-xl border border-[var(--border)]">
+            ${pointsHtml}
+          </ul>
+        </div>
+      `;
+      
+      const card = document.getElementById('inspector-card');
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  </script>
+</body>
+</html>
