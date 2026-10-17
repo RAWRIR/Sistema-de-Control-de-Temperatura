@@ -1,0 +1,30 @@
+Integrantes:
+Erick Ivan Ortiz Lozano
+Lopez Martinez Cesar Alberto
+Camacho Regalado Laura Noemi
+Padron Rocha Gisela Janeth
+Padron Rocha Ximena Lizeth
+
+¿Cuáles fueron los principales desafíos técnicos que enfrentaste en el módulo
+correspondiente a tu rol? 
+Erick Ivan Ortiz Lozano:
+"Armar el sistema eléctrico fue tedioso ya que uno de los motores se quemó por sobrevoltaje, pero lo complicado fue hacer el codigo ya que no sabía si se estaba haciendo bien ya que el armado eléctrico se estaba complicando asi que podia ser error de red o error de circuito, sobre el sistema de node-red no hubo gran complicación ya que podía hacer un inject si necesitaba testear datos tomando en cuenta que el del circuito se le complicó, lo del repositorio fue sencillo, ya que todo estaba hecho solo fue refinar detalles"
+Lopez Martinez Cesar Alberto
+"El principal reto técnico fue el despliegue y estabilización del broker MQTT (Mosquitto) y la orquestación de flujos en Node-RED, asegurando la suscripción y publicación de tópicos en tiempo real sin pérdida de paquetes. Además, representó un reto la integración con la API de Telegram mediante un bot de mensajería, gestionando el formateo de payloads JSON y controlando la cadencia de notificaciones para evitar saturación del endpoint por ráfagas de eventos."
+¿Cómo reacciona tu módulo si el microcontrolador pierde alimentación eléctrica o si la Raspberry Pi se desconecta de la red durante la operación del proceso?
+"Si el microcontrolador pierde alimentación, el broker deja de recibir payloads en los tópicos asignados; al no detectar actividad, el flujo puede quedar bloqueado esperando datos o disparar alertas repetidas por timeout si no se implementó un mensaje Last Will and Testament (LWT). Si la Raspberry Pi se desconecta de la red, se interrumpe la comunicación con los servidores externos, provocando que las peticiones HTTP/WebSocket hacia la API de Telegram fallen por socket timeout y el servicio de mensajería se interrumpa."
+Camacho Regalado Laura Noemi
+"Lo que más se me complicó fue conectar bien todos los cables de los sensores en el protoboard para que no hicieran falso contacto, y lograr que los datos de lectura salieran bien en pantalla porque al principio marcaba valores en cero o números raros hasta que pudimos instalar las librerías necesarias."
+¿Cómo reacciona tu módulo si el microcontrolador pierde alimentación eléctrica o si la Raspberry Pi se desconecta de la red durante la operación del proceso?
+"Si el microcontrolador se apaga por falta de luz, los sensores se apagan por completo al instante y ya no toman ninguna lectura. Si lo que se desconecta de la red es la Raspberry, los sensores siguen prendidos midiendo, pero sus datos se quedan flotando porque no hay internet para enviarlos al sistema."
+Padron Rocha Gisela Janeth
+"Mi mayor dificultad fue acomodar la pantalla y el dashboard para que los datos del proceso se vieran claros en gráficas y tablas, además de batallar para que los botones respondieran a tiempo y las alertas no se quedaran pegadas en la pantalla cuando había un fallo."
+¿Cómo reacciona tu módulo si el microcontrolador pierde alimentación eléctrica o si la Raspberry Pi se desconecta de la red durante la operación del proceso?
+"Si el microcontrolador se queda sin corriente, la pantalla deja de actualizarse de golpe y las gráficas se quedan en blanco o congeladas con el último valor. Si la Raspberry pierde la conexión a internet, el dashboard se desconecta, marca error de red en el navegador y no se pueden mandar instrucciones manuales."
+Padron Rocha Ximena Lizeth
+"El reto fue revisar que las pruebas del sistema funcionaran de corrido sin que el programa se trabara a mitad del ciclo, checando que los componentes prendieran y apagaran en el orden que pedía la práctica sin arrojar errores de comunicación."
+¿Cómo reacciona tu módulo si el microcontrolador pierde alimentación eléctrica o si la Raspberry Pi se desconecta de la red durante la operación del proceso?
+"Si el microcontrolador pierde la energía, todo el proceso se detiene físicamente por completo de golpe. Si la Raspberry se queda sin red, el proceso local puede seguir encendido un momento, pero se pierde el control a distancia y no queda guardado el historial de lo que estaba pasando."
+¿Cómo reacciona tu módulo si el microcontrolador pierde alimentación eléctrica o si la
+Raspberry Pi se desconecta de la red durante la operación del proceso?
+"Si la Raspberry se desconecta solo no habrá comunicación con el bot de telegram pero si el microcontrolador pierde alimentación el sistema se compromete ya que no hay sensor ni actuador si ocurre algo, operariamos a ciegas si ocurre"
